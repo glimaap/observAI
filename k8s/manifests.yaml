@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observai
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observai
+  namespace: observai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: observai
+  template:
+    metadata:
+      labels:
+        app: observai
+    spec:
+      containers:
+        - name: observai
+          image: observai:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: observai
+  namespace: observai
+spec:
+  selector:
+    app: observai
+  ports:
+    - port: 80
+      targetPort: 3000
